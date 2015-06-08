@@ -109,7 +109,7 @@ defmodule Kernel.CLI.CompileTest do
     refute File.exists?(context[:beam_file_path]), "expected the sample to not be compiled"
   end
 
-  if !System.get_env("FAKEROOTKEY") do
+  if System.get_env("USER") != "root" do
     test "fails on missing write access to .beam file", context do
       compilation_args = '#{context[:fixture]} -o #{context[:tmp_dir_path]}'
 
