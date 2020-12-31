@@ -246,6 +246,7 @@ defmodule Code.Formatter do
 
   defp state(comments, opts) do
     force_do_end_blocks = Keyword.get(opts, :force_do_end_blocks, false)
+    sigil_formatters = Keyword.get(opts, :sigil_formatters, [])
 
     rename_deprecated_at =
       if version = opts[:rename_deprecated_at] do
@@ -267,7 +268,8 @@ defmodule Code.Formatter do
       locals_without_parens: locals_without_parens,
       operand_nesting: 2,
       rename_deprecated_at: rename_deprecated_at,
-      comments: comments
+      comments: comments,
+      sigil_formatters: sigil_formatters
     }
   end
 
@@ -1419,6 +1421,7 @@ defmodule Code.Formatter do
         {doc, state} =
           entries
           |> prepend_heredoc_line()
+          |> maybe_format_sigil(name, meta, state)
           |> interpolation_to_algebra(:heredoc, state, doc, closing_delimiter)
 
         {force_unfit(doc), state}
@@ -1430,6 +1433,13 @@ defmodule Code.Formatter do
     else
       _ ->
         :error
+    end
+  end
+
+  defp maybe_format_sigil(entries, name, meta, state) do
+    case state.sigil_formatters[List.to_atom([name])] do
+      nil -> entries
+      formatter -> formatter.format(entries, meta)
     end
   end
 
